@@ -22,9 +22,9 @@ def world2stage(world_pos, viewport, screen_center, image_size=(0,0), scale=1.0)
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((800, 600), 0, 32)
 screen_center = [x/2 for x in DISPLAYSURF.get_size()]
-pygame.display.set_caption('Test')
+pygame.display.set_caption('Shoot Range')
 viewport = np.array([10, 10])
-catImg = pygame.image.load('cat.png')
+catImg = pygame.image.load('./Resources/cat.png')
 catCoord = np.array([10, 10])
 
 ## Game logics ##
