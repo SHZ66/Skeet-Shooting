@@ -13,21 +13,22 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 LIGHTBLUE = (150, 150, 255)
 
-## variables ##
-firecount = 0
-hitcount = 0
-ammo = 10
-
 ## settings ##
 # gameplay #
 FPS = 60 # frames per second setting
 viewport_sensitivity = np.array([3, 3])
 respawn_area = pygame.Rect(600, -250, 500, 400)
+TOTAL_AMMO = 10
 
 # physics #
 g = 0.05
 friction = 0.005
 V0 = 12.
+
+## variables ##
+firecount = 0
+hitcount = 0
+ammo = TOTAL_AMMO
 
 ## functions ##
 def world2stage(world_pos, viewport, screen_center, image_size=(0,0), scale=1.0):
@@ -197,6 +198,13 @@ def terminate():
     pygame.quit()
     sys.exit()
 
+def replay():
+    global firecount, hitcount, ammo
+    target.random()
+    firecount = 0
+    hitcount = 0
+    ammo = TOTAL_AMMO
+
 def handleEvents():
     global ammo, firecount
     for event in pygame.event.get():
@@ -205,6 +213,8 @@ def handleEvents():
         if event.type == KEYUP:
             if event.key == K_ESCAPE:
                 terminate()
+            if event.key == K_SPACE:
+                replay()
         if event.type == KEYDOWN:
             pass
         if event.type == MOUSEBUTTONUP:
