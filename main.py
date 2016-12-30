@@ -104,13 +104,18 @@ class Sprite(object):
         DISPLAYSURF.blit(image, stage_coord)
 
 class Rifle(Sprite):
-    def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., sound_file=None):
+    def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., fire_sound_file=None, dry_sound_file=None):
         super(Rifle, self).__init__(coord, angle, image_file, scale)
 
-        if sound_file is not None:
-            self.loadSound(sound_file)
+        if fire_sound_file is not None:
+            self.FireSound = self.loadSound(fire_sound_file)
         else:
-            self.Sound = None
+            self.FireSound = None
+
+        if dry_sound_file is not None:
+            self.DrySound = self.loadSound(dry_sound_file)
+        else:
+            self.DrySound = None
 
     def getMuzzlePosition(self):
         if self.Image is None:
@@ -123,8 +128,7 @@ class Rifle(Sprite):
             return muzzle_pos
     
     def loadSound(self, sound_file):
-        self.Sound = pygame.mixer.Sound(sound_file)
-        return self.Sound
+        return pygame.mixer.Sound(sound_file)
     
     def fire(self):
         global ammo, firecount
@@ -134,7 +138,9 @@ class Rifle(Sprite):
             bullet = Bullet.createBullet(bullets, muzzle_pos, velocity)
             ammo -= 1
             firecount += 1
-            self.Sound.play()
+            self.FireSound.play()
+        else:
+            self.DrySound.play()
 
 class Target(Sprite):
     def hit(self):
@@ -211,7 +217,7 @@ DISPLAYSURF = pygame.display.set_mode((1400, 500), 0, 32)
 screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 pygame.display.set_caption('Shoot Range Remake')
 viewport = np.array([500., -50.])
-rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav')
+rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav', './Resources/gundry.wav')
 target = Target((1000., 0.), 0., './Resources/target.png', .3)
 bullets = []
 
