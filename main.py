@@ -212,7 +212,7 @@ screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 pygame.display.set_caption('Shoot Range Remake')
 viewport = np.array([500., -50.])
 rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav')
-target = Target((1000., 0.), 0., './Resources/target.jpg', .3)
+target = Target((1000., 0.), 0., './Resources/target.png', .3)
 bullets = []
 
 ## game logics ##
