@@ -93,7 +93,7 @@ class Sprite(object):
             self.Image = pygame.transform.smoothscale(self.Image, size)
         self.Display = self.Image
         return self.Image
-    
+
     def draw(self):
         if rifle.Angle != 0:
             image = pygame.transform.rotate(self.Image, -self.Angle) # negative for clockwise
@@ -104,6 +104,14 @@ class Sprite(object):
         DISPLAYSURF.blit(image, stage_coord)
 
 class Rifle(Sprite):
+    def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., sound_file=None):
+        super(Rifle, self).__init__(coord, angle, image_file, scale)
+
+        if sound_file is not None:
+            self.loadSound(sound_file)
+        else:
+            self.Sound = None
+
     def getMuzzlePosition(self):
         if self.Image is None:
             return self.Coordinate
@@ -113,6 +121,20 @@ class Rifle(Sprite):
             muzzle_pos = rotate((0, 0), muzzle_pos, self.Angle)
             muzzle_pos += self.Coordinate
             return muzzle_pos
+    
+    def loadSound(self, sound_file):
+        self.Sound = pygame.mixer.Sound(sound_file)
+        return self.Sound
+    
+    def fire(self):
+        global ammo, firecount
+        if ammo > 0:
+            velocity = getVector(self.Angle, V0)
+            muzzle_pos = self.getMuzzlePosition()
+            bullet = Bullet.createBullet(bullets, muzzle_pos, velocity)
+            ammo -= 1
+            firecount += 1
+            self.Sound.play()
 
 class Target(Sprite):
     def hit(self):
@@ -189,7 +211,7 @@ DISPLAYSURF = pygame.display.set_mode((1400, 500), 0, 32)
 screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 pygame.display.set_caption('Shoot Range Remake')
 viewport = np.array([500., -50.])
-rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3)
+rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav')
 target = Target((1000., 0.), 0., './Resources/target.jpg', .3)
 bullets = []
 
@@ -206,7 +228,6 @@ def replay():
     ammo = TOTAL_AMMO
 
 def handleEvents():
-    global ammo, firecount
     for event in pygame.event.get():
         if event.type == QUIT:
             terminate()
@@ -220,12 +241,7 @@ def handleEvents():
         if event.type == MOUSEBUTTONUP:
             # fire
             if event.button == 1:
-                if ammo > 0:
-                    velocity = getVector(rifle.Angle, V0)
-                    muzzle_pos = rifle.getMuzzlePosition()
-                    bullet = Bullet.createBullet(bullets, muzzle_pos, velocity)
-                    ammo -= 1
-                    firecount += 1
+                rifle.fire()
     
     # keyboard #
     keys = pygame.key.get_pressed()
@@ -250,7 +266,6 @@ def handleEvents():
     if mousebuttons[0]:
         pass
 
-
 def draw():
     # draw rifle #
     rifle.draw()
@@ -267,9 +282,9 @@ def draw():
     printText('Ammo: %d'%ammo, (10, 50))
 
     # debug
-    respawn_stage_coord = world2stage(respawn_area.topleft, viewport, screen_center)
-    respawn_stage = pygame.Rect(respawn_stage_coord, respawn_area.size)
-    pygame.draw.rect(DISPLAYSURF, LIGHTBLUE, respawn_stage, 1)
+    #respawn_stage_coord = world2stage(respawn_area.topleft, viewport, screen_center)
+    #respawn_stage = pygame.Rect(respawn_stage_coord, respawn_area.size)
+    #pygame.draw.rect(DISPLAYSURF, LIGHTBLUE, respawn_stage, 1)
 
     pygame.display.update()
 
