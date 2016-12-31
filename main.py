@@ -12,7 +12,9 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 LIGHTBLUE = (150, 150, 255)
+RED = (255, 0, 0)
 LIGHTRED = (255, 150, 150)
+DARKRED = (100, 0, 0)
 
 ## settings ##
 # gameplay #
@@ -41,6 +43,7 @@ ammo = total_ammo
 countdown = 270
 starttime = 0
 time = 0
+gameover_reason = ''
 
 ## functions ##
 def world2stage(world_pos, viewport, screen, image_size=(0,0), scale=1.0):
@@ -89,6 +92,9 @@ def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32
     else:
         textRectObj.topleft = pos
     screen.blit(textSurfaceObj, textRectObj)
+
+def timeleft():
+    return (round_length - time)//1000
 
 ## classes
 class Sprite(object):
@@ -179,6 +185,7 @@ class Target(Sprite):
         self.random()
     
     def random(self):
+        global game
         if game == 0:
             pos_x = np.random.randint(respawn_box.left, respawn_box.right)
             pos_y = np.random.randint(respawn_box.top, respawn_box.bottom)
@@ -194,6 +201,7 @@ class Target(Sprite):
             self.Skeet.play()
 
     def update(self):
+        global game
         if game == 1:
             # tail trace
             tail_coord = np.copy(self.Coordinate)
@@ -272,7 +280,7 @@ DISPLAYSURF = pygame.display.set_mode(screen_size, 0, 32)
 #screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 screen_center = DISPLAYSURF.get_rect().center
 pygame.display.set_caption('Shoot Range Remake')
-namebox = eztext.Input(maxlength=45, color=BLACK, x=screen_center[0]-150, y=screen_center[1]-30, prompt='Your name: ')
+namebox = eztext.Input(maxlength=45, color=BLACK, x=screen_center[0]-150, y=screen_center[1]+80, prompt='Your name: ')
 #namebox.value = 'Shooter'
 viewport = np.array([500., -200.])
 rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav', './Resources/gundry.wav')
@@ -301,8 +309,9 @@ def record():
     namebox.value = ''
     pass
 
-def gameover():
-    global mode
+def gameover(reason=''):
+    global mode, ammo, gameover_reason
+    gameover_reason = reason
     mode = 1
 
 def handleEvents(events, screen):
@@ -360,6 +369,7 @@ def handleEvents(events, screen):
         namebox.update(events)
 
 def draw(screen):
+    global mode
     # draw rifle #
     rifle.draw(screen)
 
@@ -372,7 +382,7 @@ def draw(screen):
 
     # draw HUD
     printText(screen, 'Score: %d'%(hitcount), (10, 10))
-    printText(screen, 'Time: %d'%((round_length - time)//1000), (10, 50))
+    printText(screen, 'Time: %d'%timeleft(), (10, 50))
     printText(screen, 'Ammo: %d'%ammo, (10, 90))
 
     # draw countdown
@@ -381,9 +391,11 @@ def draw(screen):
 
     # mode 1
     if mode == 1:
-        printText(screen, 'Game Over!', (screen.get_size()[0]/2, namebox.y-70), center=True)
+        printText(screen, 'Game Over!', (screen.get_size()[0]/2, screen.get_size()[1]/2-150), fontsize=48, center=True)
+        printText(screen, gameover_reason, (screen.get_size()[0]/2, screen.get_size()[1]/2-100), fontsize=24, center=True)
+        printText(screen, str(hitcount), (screen.get_size()[0]/2, screen.get_size()[1]/2), fontsize=144, forecolor=RED, center=True)
         namebox.draw(screen)
-        printText(screen, 'Press [ENTER] to save record and replay', (screen.get_size()[0]/2, screen.get_size()[1]-40), fontsize=16, center=True)
+        printText(screen, 'Press [ENTER] to save record and replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
         #printText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
 
     # debug #
@@ -429,11 +441,11 @@ while True: # the main game loop
         else:
             time_now = pygame.time.get_ticks()
             time = time_now - starttime
-            if (round_length - time)//1000 <= 0:
-                gameover()
+            if timeleft() <= 0:
+                gameover('Out of time')
 
         if not any_active and ammo == 0:
-            gameover()
+            gameover('Out of ammo')
 
     draw(DISPLAYSURF)
 
