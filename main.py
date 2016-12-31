@@ -23,7 +23,8 @@ move_sensitivity = 2
 respawn_box = pygame.Rect(600, -250, 500, 400)
 respawn_disk_box = pygame.Rect(1000, 200, 100, 50)
 world_box = pygame.Rect(-300, -1000, 1800, 1300)
-TOTAL_AMMO = 50
+total_ammo = 100
+round_length = 60000 # ms
 
 # physics #
 g = 0.05
@@ -36,8 +37,10 @@ game = 1
 mode = 0
 firecount = 0
 hitcount = 0
-ammo = TOTAL_AMMO
+ammo = total_ammo
 countdown = 270
+starttime = 0
+time = 0
 
 ## functions ##
 def world2stage(world_pos, viewport, screen, image_size=(0,0), scale=1.0):
@@ -169,9 +172,10 @@ class Target(Sprite):
             self.Skeet = None
 
     def hit(self):
-        global hitcount
-        print('hit!')
-        hitcount += 1
+        global hitcount, mode
+        #print('hit!')
+        if mode == 0:
+            hitcount += 1
         self.random()
     
     def random(self):
@@ -274,6 +278,7 @@ viewport = np.array([500., -200.])
 rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav', './Resources/gundry.wav')
 target = Target((-1000., -1000.), -90., './Resources/disk.png', .3, skeet_sound_file='./Resources/skeet.wav')
 ding = pygame.mixer.Sound('./Resources/ding.wav')
+ding2 = pygame.mixer.Sound('./Resources/ding2.wav')
 bullets = []
 
 ## game logics ##
@@ -282,11 +287,12 @@ def terminate():
     sys.exit()
 
 def replay():
-    global firecount, hitcount, ammo, mode, countdown
+    global firecount, hitcount, ammo, mode, countdown, time
     firecount = 0
     hitcount = 0
-    ammo = TOTAL_AMMO
+    ammo = total_ammo
     countdown = 270
+    time = 0
     if mode == 1:
         mode = 0
 
@@ -294,6 +300,10 @@ def record():
     name = namebox.value
     namebox.value = ''
     pass
+
+def gameover():
+    global mode
+    mode = 1
 
 def handleEvents(events, screen):
     global mode
@@ -362,7 +372,8 @@ def draw(screen):
 
     # draw HUD
     printText(screen, 'Score: %d'%(hitcount), (10, 10))
-    printText(screen, 'Ammo: %d'%ammo, (10, 50))
+    printText(screen, 'Time: %d'%((round_length - time)//1000), (10, 50))
+    printText(screen, 'Ammo: %d'%ammo, (10, 90))
 
     # draw countdown
     if countdown > 0:
@@ -404,14 +415,25 @@ while True: # the main game loop
             any_active = True
     target.update()
 
-    if not any_active and ammo == 0:
-        # Game over!
-        mode = 1
     # count down
-    if countdown > 0:
-        if countdown == 270 or countdown == 180 or countdown == 90:
-            ding.play()
-        countdown -= 1
+    if mode == 0:
+        if countdown > 0:
+            if countdown == 270 or countdown == 180 or countdown == 90:
+                ding.play()
+            if countdown == 1:
+                pass
+                ding2.play()
+                starttime = pygame.time.get_ticks()
+                time = 0
+            countdown -= 1
+        else:
+            time_now = pygame.time.get_ticks()
+            time = time_now - starttime
+            if (round_length - time)//1000 <= 0:
+                gameover()
+
+        if not any_active and ammo == 0:
+            gameover()
 
     draw(DISPLAYSURF)
 
