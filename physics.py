@@ -26,6 +26,10 @@ def rand_const_sum(n, summ = 1.0, err_ub = 0.3):
         R[i] = l - E[i - 1] + E[i]
     return R
 
+def rand_const_sum_of_square(n, ss, mean = 0):
+    N = [0] * (n - 1)
+    M = [0] * (n - 1)
+    
 #W = initSplash(array([2, 3]))
 #print W
 #print mean(W)
