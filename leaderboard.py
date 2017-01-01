@@ -6,6 +6,12 @@ class Record():
         if self.name == '':
             self.name = 'Anonymous'
         self.score = score
+    
+    def __str__(self):
+        return '%s: %d'%(self.name, self.score)
+    
+    def __repr__(self):
+        return self.__str__()
 
 def readRecords(filename):
     records = []
@@ -23,3 +29,15 @@ def writeRecords(filename, records):
         writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for record in records:
             writer.writerow([record.name, str(record.score)])
+
+def appendRecords(filename, records):
+    with open(filename, 'ab') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for record in records:
+            writer.writerow([record.name, str(record.score)])
+
+def sortRecords(records):
+    def compare(a,b):
+        return a.score < b.score
+    records.sort(compare)
+    return records

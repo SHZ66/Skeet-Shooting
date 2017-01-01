@@ -2,6 +2,7 @@ import pygame, sys, eztext
 from pygame.locals import *
 import numpy as np
 import numpy.linalg as la
+import leaderboard as board
 
 ### Definitions ###
 
@@ -18,6 +19,7 @@ DARKRED = (100, 0, 0)
 
 ## settings ##
 # gameplay #
+leaderboard_file = 'data'
 screen_size = (1400, 700)
 FPS = 60 # frames per second setting
 viewport_sensitivity = np.array([3, 3])
@@ -274,6 +276,8 @@ class Bullet(Sprite):
 
 ### Game ###
 ## initialization ##
+records = board.readRecords(leaderboard_file)
+records = board.sortRecords(records)
 fpsClock = pygame.time.Clock()
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode(screen_size, 0, 32)
@@ -305,9 +309,20 @@ def replay():
         mode = 0
 
 def record():
+    global hitcount, leaderboard_file, records
+    if len(records) > 0:
+        min_score = records[-1].score
+    else:
+        min_score = -1
+    if hitcount <= min_score and len(records) >= 10:
+        return False
     name = namebox.value
     namebox.value = ''
-    pass
+    r = board.Record(name, hitcount)
+    records.append(r)
+    records = board.sortRecords(records)
+    #board.appendRecords(leaderboard_file, [r])
+    return True
 
 def gameover(reason=''):
     global mode, ammo, gameover_reason
@@ -318,12 +333,15 @@ def handleEvents(events, screen):
     global mode
     for event in events:
         if event.type == QUIT:
+            if mode == 1:
+                record()
             terminate()
         if event.type == KEYUP:
             if event.key == K_ESCAPE:
                 terminate()
             if event.key == K_RETURN:
-                record()
+                if mode == 1:
+                    record()
                 replay()
 
         if event.type == KEYDOWN:
@@ -395,7 +413,7 @@ def draw(screen):
         printText(screen, gameover_reason, (screen.get_size()[0]/2, screen.get_size()[1]/2-100), fontsize=24, center=True)
         printText(screen, str(hitcount), (screen.get_size()[0]/2, screen.get_size()[1]/2), fontsize=144, forecolor=RED, center=True)
         namebox.draw(screen)
-        printText(screen, 'Press [ENTER] to save record and replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
+        printText(screen, 'Press [ENTER] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
         #printText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
 
     # debug #
