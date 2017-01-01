@@ -44,9 +44,9 @@ firecount = 0
 hitcount = 0
 ammo = total_ammo
 countdown = 270
-starttime = 0
 time = 0
 gameover_reason = ''
+total_ticks = 0
 
 ## functions ##
 def world2stage(world_pos, viewport, screen, image_size=(0,0), scale=1.0):
@@ -97,6 +97,8 @@ def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32
     screen.blit(textSurfaceObj, textRectObj)
 
 def timeleft():
+    if countdown > 0:
+        return (round_length)//1000
     return (round_length - time)//1000
 
 def makeBullet(bullets, coord, velocity, type):
@@ -490,12 +492,9 @@ while True: # the main game loop
                 pass
             if countdown == 1:
                 ding2.play()
-                starttime = pygame.time.get_ticks()
                 time = 0
             countdown -= 1
         else:
-            time_now = pygame.time.get_ticks()
-            time = time_now - starttime
             if timeleft() <= 0:
                 gameover('Out of time')
 
@@ -504,6 +503,6 @@ while True: # the main game loop
 
     draw(DISPLAYSURF)
 
-    fpsClock.tick(FPS)
+    time += fpsClock.tick(FPS)
     pygame.display.set_caption('Shoot Range Remake (FPS: %i)'%fpsClock.get_fps())
 
