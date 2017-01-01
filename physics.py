@@ -1,7 +1,14 @@
 from numpy import *
 
-def initSplash(m0, M, v0, v1, n = 8):
-# Calculate initial velocities for pieces (of equal mass) in the event of a splash
+def initSplash(m0, M, v0, v1, n = 8, f = .5):
+# initSplash: Calculate initial velocities for pieces (of equal mass) in the event of a splash
+#             * constant momentum, constant kinetic energy
+# INPUT - m0: bullet mass (float), M: target total mass (float), n: number of pieces the target breaks into (int),
+#       - v0: bullet initial velocity (float vector), v1: bullet velocity after collision (float vector),
+#       - f: fraction of kinetic energy assigned to randomize w's (0 < f < 1)
+#       * (1 - f): fraction of kinetic energy assigned to randomize u's
+# OUTPUT - V: velocities of pieces (n by 2 matrix)
+
     # calculate the upperbound for sum(Err^2)
     p0 = m0 * (v0 - v1)
     p0_2 = p0.dot(p0)
@@ -11,7 +18,6 @@ def initSplash(m0, M, v0, v1, n = 8):
     ub = 2 * E0 * n / M - n * p0_2 / (M * M)
     # initialize w's
     # f: f percent of upperbound goes to Err (Err = f * ub)
-    f = 0.5
     W = p0_len / M + rand_fixed_ss(n, f * ub)   # W = |p0| + Err
     # initialize u's
     # the sum of squares of u's is (1-f)*ub
@@ -34,6 +40,13 @@ def rand_fixed_sum(n, summ = 1.0, err_ub = 0.3):
 
 def rand_fixed_ss(N, ss):
     X = random.rand(N)
+    mu1 = mean(X)
+    X -= mu1
+    f = sqrt(ss/X.dot(X))
+    return f * X
+
+def randn_fixed_ss(N, ss):
+    X = random.randn(N)
     mu1 = mean(X)
     X -= mu1
     f = sqrt(ss/X.dot(X))
@@ -62,11 +75,11 @@ if __name__ == '__main__':
     m0 = 1.0
     M = 15.0
     v0 = array([2, 1])
-    v1 = zeros(2)
+    v1 = array([1, .5])
     n = 5
     V = initSplash(m0, M, v0, v1, n)
     print V
     print 'Initial momentum = ' + str(m0 * (v0 - v1))
     print 'Splash momentum = ' + str(M/n * sum(V, 0))
-    print 'Initial kinetic energy = ' + str(.5 * m0 * (v0 - v1).dot(v0 - v1))
+    print 'Initial kinetic energy = ' + str(.5 * m0 * ((v0).dot(v0) - v1.dot(v1)))
     print 'Splash kinetic energy = ' + str(.5 * M/n * trace(V.dot(V.transpose())))
