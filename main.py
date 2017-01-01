@@ -46,7 +46,6 @@ ammo = total_ammo
 countdown = 270
 time = 0
 gameover_reason = ''
-total_ticks = 0
 
 ## functions ##
 def world2stage(world_pos, viewport, screen, image_size=(0,0), scale=1.0):
