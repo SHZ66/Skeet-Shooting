@@ -112,6 +112,13 @@ def makeBullet(bullets, coord, velocity, type):
         the_bullet.__init__(coord, velocity, True)
     return the_bullet
 
+def isInBox(box, point):
+    x,y = point
+    if x >= box.left and x <= box.right:
+        if y >= box.top and y <= box.bottom:
+            return True
+    return False
+
 ## classes
 class Sprite(object):
     def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., velocity=(0.,0.)):
@@ -183,6 +190,7 @@ class Rifle(Sprite):
             self.FireSound.play()
         else:
             self.DrySound.play()
+            pass
         return ammo
 
 class Target(Sprite):
@@ -234,7 +242,8 @@ class Target(Sprite):
             # ajust angle based on direction
             self.Angle = getDegree(self.Coordinate-tail_coord) + 180
             # eliminate bullets out of range
-            if not world_box.collidepoint(self.Coordinate):
+            #if not world_box.collidepoint(self.Coordinate):
+            if not isInBox(world_box, self.Coordinate):
                 self.random()
             
 class Bullet(Sprite):
@@ -262,7 +271,8 @@ class Bullet(Sprite):
             # hit detection
             self.collision()
             # eliminate bullets out of range
-            if not world_box.collidepoint(self.Coordinate):
+            #if not world_box.collidepoint(self.Coordinate):
+            if not isInBox(world_box, self.Coordinate):
                 self.active = False
         
     def collision(self):
@@ -272,7 +282,8 @@ class Bullet(Sprite):
         #box_stage_coord = world2stage(box.topleft, viewport, DISPLAYSURF)
         #box_stage = pygame.Rect(box_stage_coord, target.Display.get_size())
         #pygame.draw.rect(DISPLAYSURF, LIGHTBLUE, box_stage, 1)
-        if box.collidepoint(self.Coordinate):
+        #if box.collidepoint(self.Coordinate):
+        if isInBox(box, self.Coordinate):
             target_radius = target.Image.get_size()[0]/2.
             sqdist_bullet2target = sqlength(self.Coordinate - target.Coordinate)
             if sqdist_bullet2target <= target_radius*target_radius:
@@ -476,8 +487,8 @@ while True: # the main game loop
         if countdown > 0:
             if countdown == 270 or countdown == 180 or countdown == 90:
                 ding.play()
-            if countdown == 1:
                 pass
+            if countdown == 1:
                 ding2.play()
                 starttime = pygame.time.get_ticks()
                 time = 0
