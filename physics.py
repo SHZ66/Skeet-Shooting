@@ -38,34 +38,35 @@ def rand_fixed_ss(N, ss):
     X -= mu1
     f = sqrt(ss/X.dot(X))
     return f * X
-    
-#W = initSplash(array([2, 3]))
-#print W
-#print mean(W)
 
-#m0 = 1.0
-#M = 1.0
-#v0 = array([5.0, 0])
-#print (m0/M - 1)/(1+m0/M)
-#v1 = array([0.9 * 5, 0])
-#E0 = .5 * m0 * (v0.dot(v0) - v1.dot(v1))
-#p0 = m0 * (v0 - v1)
-#print E0
-#print p0.dot(p0) / 2 / M
+if __name__ == '__main__':    
+    #W = initSplash(array([2, 3]))
+    #print W
+    #print mean(W)
 
-#X = rand_fixed_ss(10, 4)
-#print X
-#print mean(X)
-#print X.dot(X)
+    #m0 = 1.0
+    #M = 1.0
+    #v0 = array([5.0, 0])
+    #print (m0/M - 1)/(1+m0/M)
+    #v1 = array([0.9 * 5, 0])
+    #E0 = .5 * m0 * (v0.dot(v0) - v1.dot(v1))
+    #p0 = m0 * (v0 - v1)
+    #print E0
+    #print p0.dot(p0) / 2 / M
 
-m0 = 1.0
-M = 15.0
-v0 = array([2, 1])
-v1 = zeros(2)
-n = 5
-V = initSplash(m0, M, v0, v1, n)
-print V
-print 'Initial momentum = ' + str(m0 * (v0 - v1))
-print 'Splash momentum = ' + str(M/n * sum(V, 0))
-print 'Initial kinetic energy = ' + str(.5 * m0 * (v0 - v1).dot(v0 - v1))
-print 'Splash kinetic energy = ' + str(.5 * M/n * trace(V.dot(V.transpose())))
+    #X = rand_fixed_ss(10, 4)
+    #print X
+    #print mean(X)
+    #print X.dot(X)
+
+    m0 = 1.0
+    M = 15.0
+    v0 = array([2, 1])
+    v1 = zeros(2)
+    n = 5
+    V = initSplash(m0, M, v0, v1, n)
+    print V
+    print 'Initial momentum = ' + str(m0 * (v0 - v1))
+    print 'Splash momentum = ' + str(M/n * sum(V, 0))
+    print 'Initial kinetic energy = ' + str(.5 * m0 * (v0 - v1).dot(v0 - v1))
+    print 'Splash kinetic energy = ' + str(.5 * M/n * trace(V.dot(V.transpose())))
