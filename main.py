@@ -339,7 +339,7 @@ def record():
     r = Record(name, hitcount)
     records.append(r)
     records = sortRecords(records)
-    #appendRecords(leaderboard_file, [r])
+    appendRecords(leaderboard_file, [r])
     return True
 
 def gameover(reason=''):
