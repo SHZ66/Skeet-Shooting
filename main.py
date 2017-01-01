@@ -2,7 +2,8 @@ import pygame, sys, eztext
 from pygame.locals import *
 import numpy as np
 import numpy.linalg as la
-import leaderboard as board
+from leaderboard import *
+from physics import *
 
 ### Definitions ###
 
@@ -98,6 +99,19 @@ def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32
 def timeleft():
     return (round_length - time)//1000
 
+def makeBullet(bullets, coord, velocity, type):
+    the_bullet = None
+    for bullet in bullets:
+        if not bullet.active:
+            the_bullet = bullet
+            break
+    if the_bullet is None:
+        the_bullet = type(coord, velocity, True)
+        bullets.append(the_bullet)
+    else:
+        the_bullet.__init__(coord, velocity, True)
+    return the_bullet
+
 ## classes
 class Sprite(object):
     def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., velocity=(0.,0.)):
@@ -163,7 +177,7 @@ class Rifle(Sprite):
         if ammo > 0:
             velocity = getVector(self.Angle, bullet_V0)
             muzzle_pos = self.getMuzzlePosition()
-            bullet = Bullet.createBullet(bullets, muzzle_pos, velocity)
+            bullet = makeBullet(bullets, muzzle_pos, velocity, type=Bullet)
             ammo -= 1
             firecount += 1
             self.FireSound.play()
@@ -179,11 +193,15 @@ class Target(Sprite):
         else:
             self.Skeet = None
 
-    def hit(self):
+    def hit(self, bullet):
         global hitcount, mode
         #print('hit!')
         if mode == 0:
             hitcount += 1
+        # splash effect
+        V = initSplash(1., 15., bullet.Velocity, np.zeros(2), 10)
+        for v in V:
+            makeBullet(particles, self.Coordinate, v, type=Particle)
         self.random()
     
     def random(self):
@@ -219,7 +237,6 @@ class Target(Sprite):
             if not world_box.collidepoint(self.Coordinate):
                 self.random()
             
-
 class Bullet(Sprite):
     def __init__(self, coord=(0.,0.), velocity=(0.,0.), active=True):
         self.active = active
@@ -243,41 +260,41 @@ class Bullet(Sprite):
             # update coordinate
             self.Coordinate += self.Velocity
             # hit detection
-            #if target.Display.get_rect().collidepoint(self.Coordinate):
-            box = pygame.Rect(target.Coordinate, target.Display.get_size())
-            box.center = target.Coordinate
-            #box_stage_coord = world2stage(box.topleft, viewport, DISPLAYSURF)
-            #box_stage = pygame.Rect(box_stage_coord, target.Display.get_size())
-            #pygame.draw.rect(DISPLAYSURF, LIGHTBLUE, box_stage, 1)
-            if box.collidepoint(self.Coordinate):
-                target_radius = target.Image.get_size()[0]/2.
-                sqdist_bullet2target = sqlength(self.Coordinate - target.Coordinate)
-                if sqdist_bullet2target <= target_radius*target_radius:
-                    # hit
-                    self.active = False
-                    target.hit()
+            self.collision()
             # eliminate bullets out of range
             if not world_box.collidepoint(self.Coordinate):
                 self.active = False
-    
-    @staticmethod
-    def createBullet(bullets, coord, velocity):
-        the_bullet = None
-        for bullet in bullets:
-            if not bullet.active:
-                the_bullet = bullet
-                break
-        if the_bullet is None:
-            the_bullet = Bullet(coord, velocity, True)
-            bullets.append(the_bullet)
-        else:
-            the_bullet.__init__(coord, velocity, True)
-        return the_bullet
+        
+    def collision(self):
+        #if target.Display.get_rect().collidepoint(self.Coordinate):
+        box = pygame.Rect(target.Coordinate, target.Display.get_size())
+        box.center = target.Coordinate
+        #box_stage_coord = world2stage(box.topleft, viewport, DISPLAYSURF)
+        #box_stage = pygame.Rect(box_stage_coord, target.Display.get_size())
+        #pygame.draw.rect(DISPLAYSURF, LIGHTBLUE, box_stage, 1)
+        if box.collidepoint(self.Coordinate):
+            target_radius = target.Image.get_size()[0]/2.
+            sqdist_bullet2target = sqlength(self.Coordinate - target.Coordinate)
+            if sqdist_bullet2target <= target_radius*target_radius:
+                # hit
+                self.active = False
+                target.hit(self)
+
+class Particle(Bullet):
+    def collision(self):
+        pass
+
+    def draw(self, screen):
+        if self.active:
+            stage_coord = world2stage(self.Coordinate, viewport, screen)
+            tail_stage_coord = world2stage(self.tail_coord, viewport, screen)
+            pygame.draw.line(screen, DARKRED, stage_coord, tail_stage_coord, 4)
+
 
 ### Game ###
 ## initialization ##
-records = board.readRecords(leaderboard_file)
-records = board.sortRecords(records)
+records = readRecords(leaderboard_file)
+records = sortRecords(records)
 fpsClock = pygame.time.Clock()
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode(screen_size, 0, 32)
@@ -292,6 +309,7 @@ target = Target((-1000., -1000.), -90., './Resources/disk.png', .3, skeet_sound_
 ding = pygame.mixer.Sound('./Resources/ding.wav')
 ding2 = pygame.mixer.Sound('./Resources/ding2.wav')
 bullets = []
+particles = []
 
 ## game logics ##
 def terminate():
@@ -318,10 +336,10 @@ def record():
         return False
     name = namebox.value
     namebox.value = ''
-    r = board.Record(name, hitcount)
+    r = Record(name, hitcount)
     records.append(r)
-    records = board.sortRecords(records)
-    #board.appendRecords(leaderboard_file, [r])
+    records = sortRecords(records)
+    #appendRecords(leaderboard_file, [r])
     return True
 
 def gameover(reason=''):
@@ -398,6 +416,10 @@ def draw(screen):
     for bullet in bullets:
         bullet.draw(screen)
 
+    # draw particles #
+    for particle in particles:
+        particle.draw(screen)
+
     # draw HUD
     printText(screen, 'Score: %d'%(hitcount), (10, 10))
     printText(screen, 'Time: %d'%timeleft(), (10, 50))
@@ -443,6 +465,10 @@ while True: # the main game loop
         bullet.update()
         if bullet.active:
             any_active = True
+
+    for particle in particles:
+        particle.update()
+
     target.update()
 
     # count down
