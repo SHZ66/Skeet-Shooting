@@ -505,3 +505,5 @@ while True: # the main game loop
     draw(DISPLAYSURF)
 
     fpsClock.tick(FPS)
+    pygame.display.set_caption('Shoot Range Remake (FPS: %i)'%fpsClock.get_fps())
+
