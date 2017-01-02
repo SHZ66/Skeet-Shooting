@@ -4,6 +4,7 @@ import numpy as np
 import numpy.linalg as la
 from leaderboard import *
 from physics import *
+import time as systime
 
 ### Definitions ###
 
@@ -85,14 +86,16 @@ def rotate(origin, point, angle):
 def sqlength(vec):
     return vec[0]*vec[0] + vec[1]*vec[1]
 
-def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32, center=False):
+def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32, location='topleft'):
     fontObj = pygame.font.Font('freesansbold.ttf', fontsize)
     textSurfaceObj = fontObj.render(message, True, forecolor, backcolor)
     textRectObj = textSurfaceObj.get_rect()
-    if center:
+    if location == 'center':
         textRectObj.center = pos
-    else:
+    elif location == 'topleft':
         textRectObj.topleft = pos
+    elif location == 'topright':
+        textRectObj.topright = pos
     screen.blit(textSurfaceObj, textRectObj)
 
 def timeleft():
@@ -309,7 +312,7 @@ records = readRecords(leaderboard_file)
 records = sortRecords(records)
 fpsClock = pygame.time.Clock()
 pygame.init()
-DISPLAYSURF = pygame.display.set_mode(screen_size, 0, 32)
+DISPLAYSURF = pygame.display.set_mode(screen_size, pygame.FULLSCREEN|pygame.DOUBLEBUF, 32)
 #screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 screen_center = DISPLAYSURF.get_rect().center
 pygame.display.set_caption('Shoot Range Remake')
@@ -437,18 +440,21 @@ def draw(screen):
     printText(screen, 'Time: %d'%timeleft(), (10, 50))
     printText(screen, 'Ammo: %d'%ammo, (10, 90))
 
+    # draw FPS
+    printText(screen, 'FPS: %i'%fpsClock.get_fps(), (screen.get_size()[0]-10, 10), fontsize=16, location='topright')
+
     # draw countdown
     if countdown > 0:
-        printText(screen, str(countdown//90+1), screen.get_rect().center, fontsize=144, center=True)
+        printText(screen, str(countdown//90+1), screen.get_rect().center, fontsize=144, location='center')
 
     # mode 1
     if mode == 1:
-        printText(screen, 'Game Over!', (screen.get_size()[0]/2, screen.get_size()[1]/2-150), fontsize=48, center=True)
-        printText(screen, gameover_reason, (screen.get_size()[0]/2, screen.get_size()[1]/2-100), fontsize=24, center=True)
-        printText(screen, str(hitcount), (screen.get_size()[0]/2, screen.get_size()[1]/2), fontsize=144, forecolor=RED, center=True)
+        printText(screen, 'Game Over!', (screen.get_size()[0]/2, screen.get_size()[1]/2-150), fontsize=48, location='center')
+        printText(screen, gameover_reason, (screen.get_size()[0]/2, screen.get_size()[1]/2-100), fontsize=24, location='center')
+        printText(screen, str(hitcount), (screen.get_size()[0]/2, screen.get_size()[1]/2), fontsize=144, forecolor=RED, location='center')
         namebox.draw(screen)
-        printText(screen, 'Press [ENTER] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
-        #printText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, center=True)
+        printText(screen, 'Press [ENTER] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
+        #printText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
 
     # debug #
     # respawn box
@@ -467,7 +473,7 @@ def draw(screen):
 ## main loop ##
 while True: # the main game loop
     DISPLAYSURF.fill(WHITE)
-
+    
     handleEvents(pygame.event.get(), DISPLAYSURF)
 
     # update world #
@@ -503,5 +509,4 @@ while True: # the main game loop
     draw(DISPLAYSURF)
 
     time += fpsClock.tick(FPS)
-    pygame.display.set_caption('Shoot Range Remake (FPS: %i)'%fpsClock.get_fps())
 
