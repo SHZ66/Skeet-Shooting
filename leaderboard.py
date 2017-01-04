@@ -1,4 +1,4 @@
-import csv, os, pickle
+import csv, os, pickle, operator
 
 class Record():
     def __init__(self, name='', score=0):
@@ -58,7 +58,5 @@ def writeRecords(filename, records):
         pickle.dump(records, f, pickle.HIGHEST_PROTOCOL)
 
 def sortRecords(records):
-    def compare(a,b):
-        return a['score'] < b['score']
-    records.sort(compare)
+    records.sort(key=operator.itemgetter('score'), reverse=True)
     return records
