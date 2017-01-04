@@ -100,8 +100,10 @@ def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32
 
 def timeleft():
     if countdown > 0:
-        return (round_length)//1000
-    return (round_length - time)//1000
+        t = (round_length)//1000
+    t = (round_length - time)//1000
+    if t < 0: t = 0
+    return t
 
 def makeBullet(bullets, coord, velocity, type):
     the_bullet = None
