@@ -1,4 +1,4 @@
-import csv, os
+import csv, os, pickle
 
 class Record():
     def __init__(self, name='', score=0):
@@ -13,6 +13,7 @@ class Record():
     def __repr__(self):
         return self.__str__()
 
+'''
 def readRecords(filename):
     records = []
     if os.path.exists(filename):
@@ -39,5 +40,22 @@ def appendRecords(filename, records):
 def sortRecords(records):
     def compare(a,b):
         return a.score < b.score
+    records.sort(compare)
+    return records
+'''
+
+def readRecords(filename):
+    if os.path.exists(filename):
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    return []
+
+def writeRecords(filename, records):
+    with open(filename, 'wb') as f:
+        pickle.dump(records, f, pickle.HIGHEST_PROTOCOL)
+
+def sortRecords(records):
+    def compare(a,b):
+        return a['score'] < b['score']
     records.sort(compare)
     return records

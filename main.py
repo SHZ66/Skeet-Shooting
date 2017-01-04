@@ -351,17 +351,18 @@ def replay():
 def record():
     global hitcount, leaderboard_file, records
     if len(records) > 0:
-        min_score = records[-1].score
+        min_score = records[-1]['score']
     else:
         min_score = -1
     if hitcount <= min_score and len(records) >= 10:
         return False
     name = namebox.value
     namebox.value = ''
-    r = Record(name, hitcount)
+    r = {'name':name, 'score': hitcount, 'time':systime.strftime("%Y-%m-%d %H:%M:%S", systime.gmtime())}
+    #r = Record(name, hitcount)
     records.append(r)
     records = sortRecords(records)
-    appendRecords(leaderboard_file, [r])
+    writeRecords(leaderboard_file, records)
     return True
 
 def gameover(reason=''):
