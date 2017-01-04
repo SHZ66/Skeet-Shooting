@@ -40,11 +40,11 @@ disk_V0 = 12.
 
 ## variables ##
 game = 1
-mode = 0
+mode = 2
 firecount = 0
 hitcount = 0
 ammo = total_ammo
-countdown = 270
+countdown = 0
 time = 0
 gameover_reason = ''
 
@@ -86,9 +86,30 @@ def rotate(origin, point, angle):
 def sqlength(vec):
     return vec[0]*vec[0] + vec[1]*vec[1]
 
-def printText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32, location='topleft'):
-    fontObj = pygame.font.Font('freesansbold.ttf', fontsize)
+def printSimpleText(screen, message, pos, forecolor=BLACK, backcolor=None, fontsize=32, bold=False, location='topleft', fontname='freesansbold.ttf'):
+    if '.ttf' in fontname:
+        fontObj = pygame.font.Font(fontname, fontsize, bold=bold)
+    else:
+        fontObj = pygame.font.SysFont(fontname, fontsize, bold=bold)
     textSurfaceObj = fontObj.render(message, True, forecolor, backcolor)
+    textRectObj = textSurfaceObj.get_rect()
+    if location == 'center':
+        textRectObj.center = pos
+    elif location == 'topleft':
+        textRectObj.topleft = pos
+    elif location == 'topright':
+        textRectObj.topright = pos
+    screen.blit(textSurfaceObj, textRectObj)
+
+def createText(message, forecolor=BLACK, backcolor=None, fontsize=32, bold=False, location='topleft', fontname='freesansbold.ttf'):
+    if '.ttf' in fontname:
+        fontObj = pygame.font.Font(fontname, fontsize, bold=bold)
+    else:
+        fontObj = pygame.font.SysFont(fontname, fontsize, bold=bold)
+    textSurfaceObj = fontObj.render(message, True, forecolor, backcolor)
+    return textSurfaceObj
+
+def printText(screen, textSurfaceObj, pos, forecolor=BLACK, backcolor=None, fontsize=32, bold=False, location='topleft', fontname='freesansbold.ttf'):
     textRectObj = textSurfaceObj.get_rect()
     if location == 'center':
         textRectObj.center = pos
@@ -310,30 +331,7 @@ class Particle(Bullet):
 
 
 ### Game ###
-## initialization ##
-records = readRecords(leaderboard_file)
-records = sortRecords(records)
-fpsClock = pygame.time.Clock()
-pygame.init()
-if 'Darwin' in platform.platform():
-    flags = pygame.FULLSCREEN|pygame.DOUBLEBUF
-else:
-    flags = pygame.DOUBLEBUF
-DISPLAYSURF = pygame.display.set_mode(screen_size, flags, 32)
-#screen_center = [x/2 for x in DISPLAYSURF.get_size()]
-screen_center = DISPLAYSURF.get_rect().center
-pygame.display.set_caption('Skeet Shooting')
-namebox = eztext.Input(maxlength=45, color=BLACK, x=screen_center[0]-150, y=screen_center[1]+80, prompt='Your name: ')
-#namebox.value = 'Shooter'
-viewport = np.array([500., -200.])
-rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav', './Resources/gundry.wav')
-target = Target((-1000., -1000.), -90., './Resources/disk.png', .3, skeet_sound_file='./Resources/skeet.wav')
-ding = pygame.mixer.Sound('./Resources/ding.wav')
-ding2 = pygame.mixer.Sound('./Resources/ding2.wav')
-bullets = []
-particles = []
-
-## game logics ##
+## game logics (functions) ##
 def terminate():
     pygame.quit()
     sys.exit()
@@ -356,7 +354,8 @@ def record():
         min_score = -1
     if hitcount <= min_score and len(records) >= 10:
         return False
-    name = namebox.value
+    name = namebox.value.strip()
+    if name == '': name = 'Anonymous'
     namebox.value = ''
     r = {'name':name, 'score': hitcount, 'time':systime.strftime("%Y-%m-%d %H:%M:%S", systime.gmtime())}
     #r = Record(name, hitcount)
@@ -371,7 +370,7 @@ def gameover(reason=''):
     mode = 1
 
 def handleEvents(events, screen):
-    global mode
+    global mode, countdown
     for event in events:
         if event.type == QUIT:
             if mode == 1:
@@ -380,10 +379,14 @@ def handleEvents(events, screen):
         if event.type == KEYUP:
             if event.key == K_ESCAPE:
                 terminate()
-            if event.key == K_RETURN:
+            if event.key == K_RETURN or event.key == K_KP_ENTER:
+                countdown = 0
                 if mode == 1:
                     record()
-                replay()
+                if mode == 2:
+                    replay()
+                mode += 1
+                if mode > 2: mode = 0
 
         if event.type == KEYDOWN:
             # fire
@@ -444,25 +447,37 @@ def draw(screen):
         particle.draw(screen)
 
     # draw HUD
-    printText(screen, 'Score: %d'%(hitcount), (10, 10))
-    printText(screen, 'Time: %d'%timeleft(), (10, 50))
-    printText(screen, 'Ammo: %d'%ammo, (10, 90))
+    printSimpleText(screen, 'Score: %d'%(hitcount), (10, 10), fontname='courier new')
+    printSimpleText(screen, ' Time: %d'%timeleft(), (10, 50), fontname='courier new')
+    printSimpleText(screen, ' Ammo: %d'%ammo, (10, 90), fontname='courier new')
 
     # draw FPS
-    printText(screen, 'FPS: %i'%fpsClock.get_fps(), (screen.get_size()[0]-10, 10), fontsize=16, location='topright')
+    printSimpleText(screen, 'FPS: %i'%fpsClock.get_fps(), (screen.get_size()[0]-10, 10), fontsize=16, location='topright')
 
     # draw countdown
-    if countdown > 0:
-        printText(screen, str(countdown//90+1), screen.get_rect().center, fontsize=144, location='center')
+    if mode == 0:
+        if countdown > 0:
+            printSimpleText(screen, str(countdown//90+1), screen.get_rect().center, fontsize=144, location='center')
 
     # mode 1
     if mode == 1:
-        printText(screen, 'Game Over!', (screen.get_size()[0]/2, screen.get_size()[1]/2-150), fontsize=48, location='center')
-        printText(screen, gameover_reason, (screen.get_size()[0]/2, screen.get_size()[1]/2-100), fontsize=24, location='center')
-        printText(screen, str(hitcount), (screen.get_size()[0]/2, screen.get_size()[1]/2), fontsize=144, forecolor=RED, location='center')
+        printSimpleText(screen, 'Game Over!', (screen.get_size()[0]/2, screen.get_size()[1]/2-150), fontsize=48, location='center')
+        printSimpleText(screen, gameover_reason, (screen.get_size()[0]/2, screen.get_size()[1]/2-100), fontsize=24, location='center')
+        printSimpleText(screen, str(hitcount), (screen.get_size()[0]/2, screen.get_size()[1]/2), fontsize=144, forecolor=RED, location='center')
         namebox.draw(screen)
-        printText(screen, 'Press [ENTER] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
-        #printText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
+        printSimpleText(screen, 'Press [ENTER] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
+        #printSimpleText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
+    if mode == 2:
+        printSimpleText(screen, 'Leaderboard', (screen.get_size()[0]/2, screen.get_size()[1]/2-220), fontsize=48, location='center')
+        printSimpleText(screen, 'Press [ENTER] to start', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center', fontname='courier new')
+        template = '%15s %8s %12s'
+        printSimpleText(screen, template%('Name','Score','Time'), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-160), fontsize=24, location='topleft', fontname='courier new', bold=True)
+        for i,r in enumerate(records):
+            name = r['name']
+            score = str(r['score'])
+            datetime = r['time'][:10]
+            printSimpleText(screen, template%(name,score,datetime), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-120 + i*40), fontsize=24, location='topleft', fontname='courier new')
+
 
     # debug #
     # respawn box
@@ -477,6 +492,29 @@ def draw(screen):
 
     pygame.display.update()
 
+## initialization ##
+records = readRecords(leaderboard_file)
+records = sortRecords(records)[:10]
+fpsClock = pygame.time.Clock()
+pygame.init()
+if 'Darwin' in platform.platform():
+    flags = pygame.FULLSCREEN|pygame.DOUBLEBUF
+else:
+    flags = pygame.DOUBLEBUF
+DISPLAYSURF = pygame.display.set_mode(screen_size, flags, 32)
+#screen_center = [x/2 for x in DISPLAYSURF.get_size()]
+screen_center = DISPLAYSURF.get_rect().center
+pygame.display.set_caption('Skeet Shooting')
+namebox = eztext.Input(maxlength=45, color=BLACK, x=screen_center[0]-150, y=screen_center[1]+80, prompt='Your name: ')
+#namebox.value = 'Shooter'
+viewport = np.array([500., -200.])
+rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav', './Resources/gundry.wav')
+target = Target((-1000., -1000.), -90., './Resources/disk.png', .3, skeet_sound_file='./Resources/skeet.wav')
+ding = pygame.mixer.Sound('./Resources/ding.wav')
+ding2 = pygame.mixer.Sound('./Resources/ding2.wav')
+bullets = []
+particles = []
+replay()
 
 ## main loop ##
 while True: # the main game loop
