@@ -47,6 +47,7 @@ ammo = total_ammo
 countdown = 0
 time = 0
 gameover_reason = ''
+recent_record = None
 
 ## functions ##
 def world2stage(world_pos, viewport, screen, image_size=(0,0), scale=1.0):
@@ -370,7 +371,7 @@ def replay():
         mode = 0
 
 def record():
-    global hitcount, leaderboard_file, records
+    global hitcount, leaderboard_file, records, recent_record
     if len(records) > 0:
         min_score = records[-1]['score']
     else:
@@ -383,6 +384,7 @@ def record():
     r = {'name':name, 'score': hitcount, 'time':systime.strftime("%Y-%m-%d %H:%M:%S", systime.gmtime())}
     #r = Record(name, hitcount)
     records.append(r)
+    recent_record = r
     records = sortRecords(records)[:10]
     writeRecords(leaderboard_file, records)
     return True
@@ -494,12 +496,20 @@ def draw(screen):
         printSimpleText(screen, 'Leaderboard', (screen.get_size()[0]/2, screen.get_size()[1]/2-220), fontsize=48, location='center')
         printSimpleText(screen, 'Press [ENTER] to start', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center', fontname='courier new')
         template = '%15s %8s %12s'
-        printSimpleText(screen, template%('Name','Score','Time'), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-160), fontsize=24, location='topleft', fontname='courier new', bold=True)
+        printSimpleText(screen, template%('Name','Score','Time'), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-160), 
+                        fontsize=24, location='topleft', fontname='courier new', bold=True)
         for i,r in enumerate(records):
             name = r['name']
             score = str(r['score'])
             datetime = r['time'][:10]
-            printSimpleText(screen, template%(name,score,datetime), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-120 + i*40), fontsize=24, location='topleft', fontname='courier new')
+            if r is recent_record:
+                color = DARKRED
+                bold = True
+            else:
+                color = BLACK
+                bold = False
+            printSimpleText(screen, template%(name,score,datetime), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-120 + i*40), 
+                            fontsize=24, forecolor=color, location='topleft', fontname='courier new', bold=bold)
 
 
     # debug #
