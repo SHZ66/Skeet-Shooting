@@ -147,6 +147,15 @@ def isInBox(box, point):
             return True
     return False
 
+def loadImage(image_file, scale=1.):
+    image = pygame.image.load(image_file)
+    if scale != 1:
+        size = np.array(image.get_size(), dtype=float)
+        size *= scale
+        size = size.astype(int)
+        image = pygame.transform.smoothscale(image, size)
+    return image
+
 ## classes
 class Sprite(object):
     def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., velocity=(0.,0.)):
@@ -172,7 +181,7 @@ class Sprite(object):
         return self.Image
 
     def draw(self, screen):
-        if rifle.Angle != 0:
+        if self.Angle != 0:
             image = pygame.transform.rotate(self.Image, -self.Angle) # negative for clockwise
         else:
             image = self.Image
@@ -235,9 +244,11 @@ class Target(Sprite):
         if mode == 0:
             hitcount += 1
         # splash effect
-        V = initSplash(1., 2., bullet.Velocity, np.zeros(2), 10)
+        V = initSplash(1., 2., bullet.Velocity, np.zeros(2), 8)
         for v in V:
-            makeBullet(particles, self.Coordinate, v, type=Particle)
+            p = makeBullet(particles, self.Coordinate, v, type=Particle)
+            r = np.random.randint(len(fragimages))
+            p.Image = fragimages[r]
         self.random()
     
     def random(self):
@@ -320,6 +331,13 @@ class Bullet(Sprite):
                 target.hit(self)
 
 class Particle(Bullet):
+    def __init__(self, coord=(0.,0.), velocity=(0.,0.), active=True, image=None):
+        self.active = active
+        super(Particle, self).__init__(coord, velocity=velocity)
+        self.tail_coord = np.array(self.Coordinate, copy=True)
+        self.Image = image
+        self.Display = self.Image
+
     def collision(self):
         pass
 
@@ -327,7 +345,12 @@ class Particle(Bullet):
         if self.active:
             stage_coord = world2stage(self.Coordinate, viewport, screen)
             tail_stage_coord = world2stage(self.tail_coord, viewport, screen)
-            pygame.draw.line(screen, DARKRED, stage_coord, tail_stage_coord, 4)
+            if self.Image is None:
+                pygame.draw.line(screen, DARKRED, stage_coord, tail_stage_coord, 4)
+            else:
+                self.Angle = getDegree(stage_coord-tail_stage_coord)
+                super(Bullet, self).draw(screen)
+
 
 
 ### Game ###
@@ -360,7 +383,7 @@ def record():
     r = {'name':name, 'score': hitcount, 'time':systime.strftime("%Y-%m-%d %H:%M:%S", systime.gmtime())}
     #r = Record(name, hitcount)
     records.append(r)
-    records = sortRecords(records)
+    records = sortRecords(records)[:10]
     writeRecords(leaderboard_file, records)
     return True
 
@@ -512,6 +535,9 @@ rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav'
 target = Target((-1000., -1000.), -90., './Resources/disk.png', .3, skeet_sound_file='./Resources/skeet.wav')
 ding = pygame.mixer.Sound('./Resources/ding.wav')
 ding2 = pygame.mixer.Sound('./Resources/ding2.wav')
+fragimages = [loadImage('./Resources/frag0.png', .3),
+              loadImage('./Resources/frag1.png', .3),
+              loadImage('./Resources/frag2.png', .3)]
 bullets = []
 particles = []
 replay()
