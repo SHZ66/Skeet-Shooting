@@ -45,9 +45,12 @@ def sortRecords(records):
 '''
 
 def readRecords(filename):
-    if os.path.exists(filename):
-        with open(filename, 'rb') as f:
-            return pickle.load(f)
+    try:
+        if os.path.exists(filename):
+            with open(filename, 'rb') as f:
+                return pickle.load(f)
+    except (IOError, EOFError):
+        return []
     return []
 
 def writeRecords(filename, records):
