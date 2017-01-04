@@ -321,7 +321,7 @@ else:
 DISPLAYSURF = pygame.display.set_mode(screen_size, flags, 32)
 #screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 screen_center = DISPLAYSURF.get_rect().center
-pygame.display.set_caption('Shoot Range Remake')
+pygame.display.set_caption('Skeet Shooting')
 namebox = eztext.Input(maxlength=45, color=BLACK, x=screen_center[0]-150, y=screen_center[1]+80, prompt='Your name: ')
 #namebox.value = 'Shooter'
 viewport = np.array([500., -200.])
