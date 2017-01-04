@@ -211,7 +211,7 @@ class Target(Sprite):
         if mode == 0:
             hitcount += 1
         # splash effect
-        V = initSplash(1., 15., bullet.Velocity, np.zeros(2), 10)
+        V = initSplash(1., 2., bullet.Velocity, np.zeros(2), 10)
         for v in V:
             makeBullet(particles, self.Coordinate, v, type=Particle)
         self.random()
