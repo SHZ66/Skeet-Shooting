@@ -1,4 +1,4 @@
-import pygame, sys, eztext
+import pygame, sys, eztext, platform
 from pygame.locals import *
 import numpy as np
 import numpy.linalg as la
@@ -312,7 +312,11 @@ records = readRecords(leaderboard_file)
 records = sortRecords(records)
 fpsClock = pygame.time.Clock()
 pygame.init()
-DISPLAYSURF = pygame.display.set_mode(screen_size, pygame.FULLSCREEN|pygame.DOUBLEBUF, 32)
+if 'Darwin' in platform.platform():
+    flags = pygame.FULLSCREEN|pygame.DOUBLEBUF
+else:
+    flags = pygame.DOUBLEBUF
+DISPLAYSURF = pygame.display.set_mode(screen_size, flags, 32)
 #screen_center = [x/2 for x in DISPLAYSURF.get_size()]
 screen_center = DISPLAYSURF.get_rect().center
 pygame.display.set_caption('Shoot Range Remake')
