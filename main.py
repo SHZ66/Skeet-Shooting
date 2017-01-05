@@ -2,7 +2,7 @@ import pygame, sys, eztext, platform
 from pygame.locals import *
 from pygame.math import Vector2
 import math
-from random import random
+import random as rand
 from leaderboard import *
 from physics import *
 import time as systime
@@ -251,23 +251,23 @@ class Target(Sprite):
         V = initSplash(1., 2., bullet.Velocity, O, 8)
         for v in V:
             p = makeBullet(particles, self.Coordinate, v, type=Particle)
-            r = random.randint(len(fragimages))
+            r = rand.randint(0,len(fragimages)-1)
             p.Image = fragimages[r]
-        self.random()
+        self.replace()
     
-    def random(self):
+    def replace(self):
         global game
         if game == 0:
-            pos_x = random.randint(respawn_box.left, respawn_box.right)
-            pos_y = random.randint(respawn_box.top, respawn_box.bottom)
+            pos_x = rand.randint(respawn_box.left, respawn_box.right)
+            pos_y = rand.randint(respawn_box.top, respawn_box.bottom)
             self.Coordinate = Vector2([pos_x, pos_y])
             self.Angle = getDegree(self.Coordinate - rifle.Coordinate) - 90
         elif game == 1:
-            pos_x = random.randint(respawn_disk_box.left, respawn_disk_box.right)
-            pos_y = random.randint(respawn_disk_box.top, respawn_disk_box.bottom)
+            pos_x = rand.randint(respawn_disk_box.left, respawn_disk_box.right)
+            pos_y = rand.randint(respawn_disk_box.top, respawn_disk_box.bottom)
             self.Coordinate = Vector2([pos_x, pos_y])
-            angle = random.randint(100, 120)
-            speed = random.randint(disk_V0-2, disk_V0+2)
+            angle = rand.randint(100, 120)
+            speed = rand.randint(disk_V0-2, disk_V0+2)
             self.Velocity = getVector(-angle, speed)
             self.Skeet.play()
 
@@ -287,7 +287,7 @@ class Target(Sprite):
             # eliminate bullets out of range
             #if not world_box.collidepoint(self.Coordinate):
             if not isInBox(world_box, self.Coordinate):
-                self.random()
+                self.replace()
             
 class Bullet(Sprite):
     def __init__(self, coord=(0.,0.), velocity=(0.,0.), active=True):
