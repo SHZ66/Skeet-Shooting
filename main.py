@@ -31,6 +31,7 @@ respawn_disk_box = pygame.Rect(1000, 200, 100, 50)
 world_box = pygame.Rect(-300, -1000, 1800, 1300)
 total_ammo = 100
 round_length = 60000 # ms
+monospace_font = 'Courier New'
 
 # physics #
 g = 0.05
@@ -472,9 +473,9 @@ def draw(screen):
         particle.draw(screen)
 
     # draw HUD
-    printSimpleText(screen, 'Score: %d'%(hitcount), (10, 10), fontname='courier new')
-    printSimpleText(screen, ' Time: %d'%timeleft(), (10, 50), fontname='courier new')
-    printSimpleText(screen, ' Ammo: %d'%ammo, (10, 90), fontname='courier new')
+    printSimpleText(screen, 'Score: %d'%(hitcount), (10, 10), fontname=monospace_font)
+    printSimpleText(screen, ' Time: %d'%timeleft(), (10, 50), fontname=monospace_font)
+    printSimpleText(screen, ' Ammo: %d'%ammo, (10, 90), fontname=monospace_font)
 
     # draw FPS
     printSimpleText(screen, 'FPS: %i'%fpsClock.get_fps(), (screen.get_size()[0]-10, 10), fontsize=16, location='topright')
@@ -494,10 +495,10 @@ def draw(screen):
         #printSimpleText(screen, 'Press [SPACE] to replay', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center')
     if mode == 2:
         printSimpleText(screen, 'Leaderboard', (screen.get_size()[0]/2, screen.get_size()[1]/2-220), fontsize=48, location='center')
-        printSimpleText(screen, 'Press [ENTER] to start', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center', fontname='courier new')
+        printSimpleText(screen, 'Press [ENTER] to start', (screen.get_size()[0]/2, screen.get_size()[1]-30), fontsize=16, location='center', fontname=monospace_font)
         template = '%15s %8s %12s'
         printSimpleText(screen, template%('Name','Score','Time'), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-160), 
-                        fontsize=24, location='topleft', fontname='courier new', bold=True)
+                        fontsize=24, location='topleft', fontname=monospace_font, bold=True)
         for i,r in enumerate(records):
             name = r['name']
             score = str(r['score'])
@@ -509,7 +510,7 @@ def draw(screen):
                 color = BLACK
                 bold = False
             printSimpleText(screen, template%(name,score,datetime), (screen.get_size()[0]/2-320, screen.get_size()[1]/2-120 + i*40), 
-                            fontsize=24, forecolor=color, location='topleft', fontname='courier new', bold=bold)
+                            fontsize=24, forecolor=color, location='topleft', fontname=monospace_font, bold=bold)
 
 
     # debug #
