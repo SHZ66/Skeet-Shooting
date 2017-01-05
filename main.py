@@ -381,7 +381,7 @@ def record():
     name = namebox.value.strip()
     if name == '': name = 'Anonymous'
     namebox.value = ''
-    r = {'name':name, 'score': hitcount, 'time':systime.strftime("%Y-%m-%d %H:%M:%S", systime.gmtime())}
+    r = {'name':name, 'score': hitcount, 'time':systime.strftime("%Y-%m-%d %H:%M:%S", systime.localtime())}
     #r = Record(name, hitcount)
     records.append(r)
     recent_record = r
