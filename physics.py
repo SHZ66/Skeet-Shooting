@@ -1,6 +1,6 @@
-from pygame.math import *
-from math import *
-from random import random
+from pygame.math import Vector2
+from math import fsum, sqrt
+import random
 
 def initSplash(m0, M, v0, v1, n = 8, f = .5):
 # initSplash: Calculate initial velocities for pieces (of equal mass) in the event of a splash
@@ -37,7 +37,7 @@ def initSplash(m0, M, v0, v1, n = 8, f = .5):
     return W
 
 def rand_fixed_ss(N, ss):
-    X = [random() for i in range(N)]
+    X = [random.random() for i in range(N)]
     mu1 = fsum(X) / N
     # X -= mu1 and X2 = X.dot(X)
     X2 = 0
