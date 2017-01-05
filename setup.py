@@ -1,7 +1,7 @@
 from cx_Freeze import setup,Executable
 import os, sys
 
-includefiles = ['Resources\\']
+includefiles = ['Resources\\', 'README.md']
 includes = []
 excludes = ['Tkinter', 'numpy', 'scipy', 'email', 'xml', 'pyreadline', 'unitest', 'logging', 'pkg_resources', 'distutils']
 packages = ['pygame']
