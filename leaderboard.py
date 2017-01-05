@@ -1,4 +1,4 @@
-import csv, os, pickle, operator
+import os, pickle, operator
 
 class Record():
     def __init__(self, name='', score=0):
