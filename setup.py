@@ -17,5 +17,5 @@ setup(
     author = 'Charles & Edward',
     author_email = 'shz620@outlook.com',
     options = {'build_exe': {'excludes':excludes,'packages':packages,'include_files':includefiles}}, 
-    executables = [Executable('skeetgame.py')]
+    executables = [Executable('skeetgame.py', base=base)]
 )
