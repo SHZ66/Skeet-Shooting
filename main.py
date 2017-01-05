@@ -3,8 +3,6 @@ from pygame.locals import *
 from pygame.math import Vector2
 import math
 from random import random
-import numpy as np
-import numpy.linalg as la
 from leaderboard import *
 from physics import *
 import time as systime
