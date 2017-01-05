@@ -3,7 +3,7 @@ import os, sys
 
 includefiles = ['Resources\\']
 includes = []
-excludes = ['Tkinter', 'numpy', 'scipy', 'email']
+excludes = ['Tkinter', 'numpy', 'scipy', 'email', 'xml', 'pyreadline', 'unitest', 'logging', 'pkg_resources', 'distutils']
 packages = ['pygame']
 
 base = None
