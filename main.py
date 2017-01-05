@@ -1,5 +1,8 @@
 import pygame, sys, eztext, platform
 from pygame.locals import *
+from pygame.math import Vector2
+import math
+from random import random
 import numpy as np
 import numpy.linalg as la
 from leaderboard import *
@@ -9,8 +12,7 @@ import time as systime
 ### Definitions ###
 
 ## constants ##
-PI = np.pi
-eps = np.finfo(float).eps
+PI = math.pi
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
@@ -18,13 +20,14 @@ LIGHTBLUE = (150, 150, 255)
 RED = (255, 0, 0)
 LIGHTRED = (255, 150, 150)
 DARKRED = (100, 0, 0)
+O = Vector2(0,0)
 
 ## settings ##
 # gameplay #
 leaderboard_file = 'data'
 screen_size = (1400, 700)
 FPS = 60 # frames per second setting
-viewport_sensitivity = np.array([3, 3])
+viewport_sensitivity = Vector2(3, 3)
 move_sensitivity = 2
 respawn_box = pygame.Rect(600, -250, 500, 400)
 respawn_disk_box = pygame.Rect(1000, 200, 100, 50)
@@ -52,24 +55,27 @@ recent_record = None
 
 ## functions ##
 def world2stage(world_pos, viewport, screen, image_size=(0,0), scale=1.0):
-    image_center = np.array([x/2. for x in image_size])
+    image_center = Vector2([x/2. for x in image_size])
     screen_center = screen.get_rect().center
     stage_x = (world_pos[0] - viewport[0])*scale + screen_center[0] - image_center[0]
     stage_y = (world_pos[1] - viewport[1])*scale + screen_center[1] - image_center[1]
-    return np.array([stage_x, stage_y])
+    return Vector2([stage_x, stage_y])
 
 def stage2world(stage_pos, viewport, screen, scale=1.0):
     screen_center = screen.get_rect().center
     world_x = (stage_pos[0] - screen_center[0])/scale + viewport[0]
     world_y = (stage_pos[1] - screen_center[1])/scale + viewport[1] 
-    return np.array([world_x, world_y])
+    return Vector2([world_x, world_y])
+
+def intVector2(vec):
+    return [int(vec[0]), int(vec[1])]
 
 def getDegree(vec):
-    return np.degrees(np.arctan2(vec[1], vec[0]))
+    return -vec.angle_to(O)
 
 def getVector(degree, length=1.):
-    rad = np.radians(degree)
-    return np.array((length*np.cos(rad), length*np.sin(rad)))
+    rad = math.radians(degree)
+    return Vector2((length*math.cos(rad), length*math.sin(rad)))
 
 def rotate(origin, point, angle):
     """
@@ -77,12 +83,12 @@ def rotate(origin, point, angle):
 
     The angle should be given in degrees.
     """
-    angle = np.radians(angle)
+    angle = math.radians(angle)
     ox, oy = origin
     px, py = point
 
-    qx = ox + np.cos(angle) * (px - ox) - np.sin(angle) * (py - oy)
-    qy = oy + np.sin(angle) * (px - ox) + np.cos(angle) * (py - oy)
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
     return qx, qy
 
 def sqlength(vec):
@@ -152,18 +158,17 @@ def isInBox(box, point):
 def loadImage(image_file, scale=1.):
     image = pygame.image.load(image_file)
     if scale != 1:
-        size = np.array(image.get_size(), dtype=float)
+        size = Vector2(image.get_size())
         size *= scale
-        size = size.astype(int)
-        image = pygame.transform.smoothscale(image, size)
+        image = pygame.transform.smoothscale(image, intVector2(size))
     return image
 
 ## classes
 class Sprite(object):
     def __init__(self, coord=(0,0), angle=0., image_file=None, scale=1., velocity=(0.,0.)):
-        self.Coordinate = np.array(coord)
+        self.Coordinate = Vector2(coord)
         self.Angle = angle
-        self.Velocity = np.array(velocity)
+        self.Velocity = Vector2(velocity)
         if image_file is not None:
             self.loadImage(image_file, scale)
         else:
@@ -175,10 +180,9 @@ class Sprite(object):
     def loadImage(self, image_file, scale=1.):
         self.Image = pygame.image.load(image_file)
         if scale != 1:
-            size = np.array(self.Image.get_size(), dtype=float)
+            size = Vector2(self.Image.get_size())
             size *= scale
-            size = size.astype(int)
-            self.Image = pygame.transform.smoothscale(self.Image, size)
+            self.Image = pygame.transform.smoothscale(self.Image, intVector2(size))
         self.Display = self.Image
         return self.Image
 
@@ -213,8 +217,8 @@ class Rifle(Sprite):
             return self.Coordinate
         else:
             (width, height) = self.Image.get_size()
-            muzzle_pos = np.array([width/2., -height/4.])
-            muzzle_pos = rotate((0, 0), muzzle_pos, self.Angle)
+            muzzle_pos = Vector2([width/2., -height/4.])
+            muzzle_pos = muzzle_pos.rotate(self.Angle)
             muzzle_pos += self.Coordinate
             return muzzle_pos
     
@@ -246,26 +250,26 @@ class Target(Sprite):
         if mode == 0:
             hitcount += 1
         # splash effect
-        V = initSplash(1., 2., bullet.Velocity, np.zeros(2), 8)
+        V = initSplash(1., 2., bullet.Velocity, O, 8)
         for v in V:
             p = makeBullet(particles, self.Coordinate, v, type=Particle)
-            r = np.random.randint(len(fragimages))
+            r = random.randint(len(fragimages))
             p.Image = fragimages[r]
         self.random()
     
     def random(self):
         global game
         if game == 0:
-            pos_x = np.random.randint(respawn_box.left, respawn_box.right)
-            pos_y = np.random.randint(respawn_box.top, respawn_box.bottom)
-            self.Coordinate = np.array([pos_x, pos_y], dtype=float)
+            pos_x = random.randint(respawn_box.left, respawn_box.right)
+            pos_y = random.randint(respawn_box.top, respawn_box.bottom)
+            self.Coordinate = Vector2([pos_x, pos_y])
             self.Angle = getDegree(self.Coordinate - rifle.Coordinate) - 90
         elif game == 1:
-            pos_x = np.random.randint(respawn_disk_box.left, respawn_disk_box.right)
-            pos_y = np.random.randint(respawn_disk_box.top, respawn_disk_box.bottom)
-            self.Coordinate = np.array([pos_x, pos_y], dtype=float)
-            angle = np.random.randint(100, 120)
-            speed = np.random.randint(disk_V0-2, disk_V0+2)
+            pos_x = random.randint(respawn_disk_box.left, respawn_disk_box.right)
+            pos_y = random.randint(respawn_disk_box.top, respawn_disk_box.bottom)
+            self.Coordinate = Vector2([pos_x, pos_y])
+            angle = random.randint(100, 120)
+            speed = random.randint(disk_V0-2, disk_V0+2)
             self.Velocity = getVector(-angle, speed)
             self.Skeet.play()
 
@@ -273,9 +277,9 @@ class Target(Sprite):
         global game
         if game == 1:
             # tail trace
-            tail_coord = np.copy(self.Coordinate)
+            tail_coord = Vector2(self.Coordinate)
             # gravity
-            self.Velocity += np.array([0., g])
+            self.Velocity += Vector2(0., g)
             # air friction
             self.Velocity -= self.Velocity * friction
             # update coordinate
@@ -291,7 +295,7 @@ class Bullet(Sprite):
     def __init__(self, coord=(0.,0.), velocity=(0.,0.), active=True):
         self.active = active
         super(Bullet, self).__init__(coord, velocity=velocity)
-        self.tail_coord = np.array(self.Coordinate, copy=True)
+        self.tail_coord = Vector2(self.Coordinate)
 
     def draw(self, screen):
         if self.active:
@@ -302,9 +306,9 @@ class Bullet(Sprite):
     def update(self):
         if self.active:
             # tail trace
-            self.tail_coord = np.copy(self.Coordinate)
+            self.tail_coord = Vector2(self.Coordinate)
             # gravity
-            self.Velocity += np.array([0., g])
+            self.Velocity += Vector2(0., g)
             # air friction
             self.Velocity -= self.Velocity * friction
             # update coordinate
@@ -336,7 +340,7 @@ class Particle(Bullet):
     def __init__(self, coord=(0.,0.), velocity=(0.,0.), active=True, image=None):
         self.active = active
         super(Particle, self).__init__(coord, velocity=velocity)
-        self.tail_coord = np.array(self.Coordinate, copy=True)
+        self.tail_coord = Vector2(self.Coordinate)
         self.Image = image
         self.Display = self.Image
 
@@ -541,7 +545,7 @@ screen_center = DISPLAYSURF.get_rect().center
 pygame.display.set_caption('Skeet Shooting')
 namebox = eztext.Input(maxlength=45, color=BLACK, x=screen_center[0]-150, y=screen_center[1]+80, prompt='Your name: ')
 #namebox.value = 'Shooter'
-viewport = np.array([500., -200.])
+viewport = Vector2(500., -200.)
 rifle = Rifle((0., 0.), 0., './Resources/m1a.png', .3, './Resources/gunfire.wav', './Resources/gundry.wav')
 target = Target((-1000., -1000.), -90., './Resources/disk.png', .3, skeet_sound_file='./Resources/skeet.wav')
 ding = pygame.mixer.Sound('./Resources/ding.wav')
