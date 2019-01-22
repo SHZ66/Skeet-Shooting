@@ -93,8 +93,9 @@ if __name__ == '__main__':
     v1 = Vector2(1, .5)
     n = 5
     V = initSplash(m0, M, v0, v1, n)
-    print V
-    print 'Initial momentum = ' + strVec2(m0 * (v0 - v1))
-    print 'Splash momentum = ' + strVec2(M/n * sumVec2(V))
-    print 'Initial kinetic energy = ' + str(.5 * m0 * ((v0).dot(v0) - v1.dot(v1)))
-    print 'Splash kinetic energy = ' + str(.5 * M/n * sumVec2sq(V))
+    print(V)
+    print('Initial momentum = ' + strVec2(m0 * (v0 - v1)))
+    print('Splash momentum = ' + strVec2(M/n * sumVec2(V)))
+    print('Initial kinetic energy = ' + str(.5 * m0 * ((v0).dot(v0) - v1.dot(v1))))
+    print('Splash kinetic energy = ' + str(.5 * M/n * sumVec2sq(V)))
+    
